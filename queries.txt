@@ -1,0 +1,52 @@
+--Pakolliseen osuuteen liittyvät kyselyt
+
+--Haetaan kaikki tiedot, kaikista ajoneuvoista (ei välttämättä erityisen mielenkiintoinen, siksi enemmän kuin 6 kyselyä)
+SELECT *
+FROM vehicle;
+
+
+--Haetaan niiden asiakkaiden ja autojen tietoja, joiden ajoneuvo ei ole mennyt joskus mennyt katastuksesta läpi
+SELECT fname, sname, make, model
+FROM customer, vehicle, checkup
+WHERE customer_id = vehicle.vehicle_id
+AND vehicle.vehicle_id = checkup.vehicle_id
+AND inspection_result = 'Fail';
+
+--Haetaan kustannukset ajoneuvoittain nousevassa järjestyksessä
+SELECT make, model, cost
+FROM vehicle, checkup
+WHERE vehicle.vehicle_id = checkup.vehicle_id
+ORDER BY cost ASC
+
+--Haetaan niiden autojen tiedot, joille ei ole tehty mitään pajalla/tarkastuksessa
+SELECT *
+FROM vehicle
+WHERE NOT EXISTS (
+SELECT *
+	FROM checkup
+	WHERE vehicle.vehicle_id = checkup.vehicle_id
+)
+
+--Haetaan niiden mekaanikkojen tiedot, jotka ovat työskennelleet joskus Mazda-merkkisten autojen parissa
+SELECT address, fname, sname, seniority
+FROM shop, mechanic, checkup
+WHERE mechanic.employee_id = checkup.employee_id
+AND shop.shop_id = checkup.shop_id
+AND vehicle_id IN (
+SELECT vehicle_id
+	FROM vehicle
+	WHERE make = 'Mazda'
+)
+
+--Agregaattifunktio: autojen mukaan syntyneiden laskujen summa
+SELECT make, model, SUM(cost) AS "Summa euroina"
+FROM vehicle, checkup
+WHERE vehicle.vehicle_id = checkup.vehicle_id
+GROUP BY make, model;
+
+--Haetaan niiden asikkaiden etunimi ja sukunimi, joilla on ollut pajalla enemmän, kuin yksi auto
+SELECT fname, sname, COUNT(DISTINCT vehicle_id) AS "Asiakkaan autojen lkm"
+FROM customer, vehicle
+WHERE customer.customer_id = vehicle.customer_id
+GROUP BY fname, sname
+HAVING COUNT(DISTINCT vehicle_id) > 1;
