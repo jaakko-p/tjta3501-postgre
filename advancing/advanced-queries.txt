@@ -1,0 +1,27 @@
+--HUOM. tietokantaa muutettu hieman, nyt olemassa myös details-relaatio, jossa kerrotaan esimerkiksi korjauskehotuksista ja hylkäyksen perusteista
+
+--Entä jos ei muisteta tai tehdään virhe auton merkin kirjoittamisessa?
+SELECT make
+FROM vehicle
+WHERE make % 'Alpha Roomeo';
+
+--Ei ihan muisteta, miten asiakkaan nimi olikaan tarkoitus kirjoittaa
+SELECT fname, sname
+FROM customer
+WHERE name % 'shailinn';
+
+--Prisman kassalla S-korttia kyselivät, ei tainnut olla kyse naapurin Fordista
+SELECT make, model
+FROM vehicle
+WHERE metaphone(model, 2) = metaphone('es kortti', 2);
+
+--Haetaan tietoa ruostevaurioista (huom. finnish-asetus ei toiminutkaan oletetusti, näyttäisi muuttavan hyvin epämääräisesti sanat perusmuotoon...)
+SELECT *
+FROM checkup
+WHERE to_tsvector ('english', details) @@ 'ruostevaurioitunut';
+
+--Kiinnostaisi tietää kaikki korivaurioiden takia hylätyt autot
+SELECT make, model, vehicle.vehicle_id, details
+FROM checkup, vehicle
+WHERE to_tsvector ('finnish', details) @@ 'kori'
+AND checkup.vehicle_id = vehicle.vehicle_id
